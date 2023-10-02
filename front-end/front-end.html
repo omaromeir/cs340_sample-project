@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Data Display</title>
+    <style>
+        /* Default Table Style */
+        html * {
+          font-family: sans-serif;
+        }
+        table {
+          color: #333;
+          background: white;
+          border: 1px solid grey;
+          font-size: 12pt;
+          border-collapse: collapse;
+        }
+        table thead th,
+        table tfoot th {
+          color: #777;
+          background: rgba(0,0,0,.1);
+        }
+        table caption {
+          padding:.5em;
+        }
+        table th,
+        table td {
+          padding: .5em;
+          border: 1px solid lightgrey;
+        }
+        input[type=text] {
+          width: 500px;
+          padding: 5px 5px;
+          margin: 8px 0;
+          box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <h1>Database application 0.1</h1>
+
+    <div><input type="text" id="query" placeholder="Enter SQL query"></div>
+
+    <!-- Button to trigger the API request -->
+    <button id="fetch-button">Execute query</button>
+
+    <!-- Placeholder for the data -->
+    <div id="table-container"></div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const queryInput = document.getElementById("query");
+            const fetchButton = document.getElementById("fetch-button");
+            const tableContainer = document.getElementById("table-container");
+
+            fetchButton.addEventListener("click", function() {
+                const apiUrl = "http://127.0.0.1:5000/dat";
+
+                fetch(apiUrl, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        // Pass the query to the back-end
+                        body: queryInput.value.trim(),
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log(data);
+                        // Create a table to display the JSON data
+                        const table = document.createElement("table");
+                        const thead = document.createElement("thead");
+                        const tbody = document.createElement("tbody");
+
+                        // Create table headers
+                        const headers = Object.values(data["results"][0]);
+                        const headerRow = document.createElement("tr");
+                        headers.forEach(header => {
+                            const th = document.createElement("th");
+                            th.textContent = header;
+                            headerRow.appendChild(th);
+                        });
+                        thead.appendChild(headerRow);
+                        table.appendChild(thead);
+
+                        // Create table rows with data
+                        const keys = Object.keys(data["results"][0]);
+                        data["results"][1].forEach(item => {
+                            const row = document.createElement("tr");
+                            keys.forEach(header => {
+                                const cell = document.createElement("td");
+                                cell.textContent = item[header];
+                                row.appendChild(cell);
+                            });
+                            tbody.appendChild(row);
+                        });
+                        table.appendChild(tbody);
+
+                        // Replace the existing table with the new one
+                        tableContainer.innerHTML = "";
+                        tableContainer.appendChild(table);
+                    })
+                    .catch(error => {
+                        // Handle any errors
+                        tableContainer.textContent = `Error: ${error.message}`;
+                    });
+            });
+        });
+    </script>
+</body>
+</html>
